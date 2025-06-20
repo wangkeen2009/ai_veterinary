@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>人工智慧於轉診獸醫醫學的 18 週研究計畫</title>
+  <!-- Marked.js for Markdown → HTML 轉換 -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* ——  Dark‑mode 佈景 —— */
+    :root {
+      --bg: #121212;
+      --fg: #e0e0e0;
+      --accent: #4fc3f7;
+      --card: #1e1e1e;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans", "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      padding: 1.5rem 2rem;
+      background: var(--card);
+      box-shadow: 0 2px 6px rgba(0,0,0,.6);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    label {
+      font-weight: bold;
+    }
+    select {
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--accent);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    main {
+      padding: 2rem max(5vw, 2rem);
+    }
+    /* Markdown 內容樣式調整 */
+    main h2, main h3, main h4, main h5, main h6 {
+      color: var(--accent);
+      margin-top: 2rem;
+    }
+    main pre {
+      background: #272727;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow: auto;
+    }
+    main code {
+      background: #272727;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+    a { color: #80d8ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>人工智慧於轉診獸醫醫學的 18 週研究計畫</h1>
+  </header>
+
+  <nav>
+    <label for="weekSelect">週次：</label>
+    <select id="weekSelect" disabled>
+      <option>載入中…</option>
+    </select>
+  </nav>
+
+  <main id="content">請稍候，正在載入 Markdown…</main>
+
+  <script>
+    // 讀取 Markdown 檔並依「## 第 n 週」切分
+    const mdURL = "18週研究計畫.md";  // 請確保 .md 檔與本 HTML 置於同一目錄
+    const weekSelect = document.getElementById("weekSelect");
+    const contentDiv = document.getElementById("content");
+
+    fetch(mdURL)
+      .then(res => {
+        if (!res.ok) throw new Error("讀取 Markdown 失敗");
+        return res.text();
+      })
+      .then(rawMD => {
+        // 使用正規式將檔案切分：開頭介紹 + 各週內容
+        const parts = rawMD.split(/\n(?=## 第\d+週)/g);
+        const intro = parts.shift(); // 第一段為前言
+
+        // 建立「前言」項目
+        const sections = [{ label: "前言", md: intro }];
+
+        parts.forEach(p => {
+          const lineBreak = p.indexOf("\n");
+          const titleLine = p.slice(0, lineBreak).trim();
+          const mdBody = p;
+          sections.push({ label: titleLine.replace(/^##\s*/, ""), md: mdBody });
+        });
+
+        // 填充下拉選單
+        weekSelect.innerHTML = "";
+        sections.forEach((s, idx) => {
+          const opt = document.createElement("option");
+          opt.value = idx;
+          opt.textContent = s.label;
+          weekSelect.appendChild(opt);
+        });
+        weekSelect.disabled = false;
+
+        // 變更事件顯示內容
+        const render = idx => {
+          const md = sections[idx].md;
+          contentDiv.innerHTML = marked.parse(md);
+          // 讓畫面回到頂端
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        weekSelect.addEventListener("change", e => render(e.target.value));
+
+        // 預設顯示前言或第 1 週
+        render(0);
+      })
+      .catch(err => {
+        contentDiv.textContent = err.message;
+      });
+  </script>
+</body>
+</html>
